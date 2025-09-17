@@ -12,7 +12,7 @@ import {
   Eye,
   Filter
 } from 'lucide-react';
-import adminApi from '@/lib/adminApi';
+import adminApi, { adminApplicationsApi } from '@/lib/adminApi';
 
 interface Application {
   id: number;
@@ -51,6 +51,7 @@ export default function AdminApplicationsPage() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const router = useRouter();
+  const [requestingId, setRequestingId] = useState<number | null>(null);
 
   useEffect(() => {
     fetchApplications();
@@ -84,6 +85,20 @@ export default function AdminApplicationsPage() {
       setStats(response.data);
     } catch (error: any) {
       console.error('Failed to fetch stats:', error);
+    }
+  };
+
+  const handleAcceptAndRequestOffer = async (applicationId: number) => {
+    try {
+      setRequestingId(applicationId);
+      await adminApplicationsApi.requestOfferLetter(applicationId, true);
+      await fetchApplications();
+      await fetchStats();
+    } catch (error: any) {
+      console.error('Failed to request offer letter:', error);
+      setError('Failed to request offer letter');
+    } finally {
+      setRequestingId(null);
     }
   };
 
@@ -344,12 +359,24 @@ export default function AdminApplicationsPage() {
                       </td>
                       
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        <button
-                          onClick={() => router.push(`/admin/applications/${application.id}`)}
-                          className="text-indigo-600 hover:text-indigo-700 font-medium"
-                        >
-                          Review
-                        </button>
+                        <div className="flex items-center gap-3">
+                          <button
+                            onClick={() => router.push(`/admin/applications/${application.id}`)}
+                            className="text-indigo-600 hover:text-indigo-700 font-medium"
+                          >
+                            Review
+                          </button>
+                          {(application.status === 'submitted' || application.status === 'under_review') && (
+                            <button
+                              onClick={() => handleAcceptAndRequestOffer(application.id)}
+                              disabled={requestingId === application.id}
+                              className={`px-3 py-1 rounded text-white text-xs font-medium ${requestingId === application.id ? 'bg-purple-400' : 'bg-purple-600 hover:bg-purple-700'}`}
+                              title="Mark accepted to proceed and request offer letter"
+                            >
+                              {requestingId === application.id ? 'Requesting…' : 'Accept & Request Offer'}
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   );

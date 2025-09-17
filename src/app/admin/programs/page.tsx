@@ -29,6 +29,15 @@ export default function ProgramsList() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [deleteLoading, setDeleteLoading] = useState<number | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadResult, setUploadResult] = useState<
+    | null
+    | {
+        inserted: number;
+        skipped_duplicates: number;
+        errors: { row: number; error: string }[];
+      }
+  >(null);
 
   // Filters and pagination
   const [search, setSearch] = useState('');
@@ -99,6 +108,48 @@ export default function ProgramsList() {
     setCurrentPage(1);
   };
 
+  const handleDownloadTemplate = async () => {
+    try {
+      const response = await programsApi.downloadProgramsTemplate();
+      const blob = new Blob([response.data], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'uk_programs_template.csv';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (e: any) {
+      alert('Failed to download template');
+    }
+  };
+
+  const fileInputId = 'programs-bulk-upload-input';
+  const handleUploadClick = () => {
+    setUploadResult(null);
+    const input = document.getElementById(fileInputId) as HTMLInputElement | null;
+    input?.click();
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      setUploading(true);
+      const result = await programsApi.bulkUploadPrograms(file);
+      setUploadResult(result);
+      // refresh list after upload
+      setCurrentPage(1);
+      await loadPrograms();
+    } catch (err: any) {
+      alert(err?.response?.data?.detail || 'Bulk upload failed');
+    } finally {
+      setUploading(false);
+      e.target.value = '';
+    }
+  };
+
   if (loading && programs.length === 0) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -119,13 +170,37 @@ export default function ProgramsList() {
             Intelligent university program curation for AI-powered guidance
           </p>
         </div>
-        <Link
-          href="/admin/programs/new"
-          className="inline-flex items-center px-6 py-3 border border-transparent shadow-lg text-sm font-semibold rounded-xl text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 transform transition-all duration-200 hover:scale-105"
-        >
-          <PlusIcon className="h-5 w-5 mr-2" />
-          Add New Program
-        </Link>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={handleDownloadTemplate}
+            className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+          >
+            Download CSV Template
+          </button>
+          <input
+            id={fileInputId}
+            type="file"
+            accept=".csv,text/csv"
+            className="hidden"
+            onChange={handleFileChange}
+          />
+          <button
+            type="button"
+            onClick={handleUploadClick}
+            disabled={uploading}
+            className="inline-flex items-center px-4 py-2 border border-transparent shadow-lg text-sm font-semibold rounded-md text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50"
+          >
+            {uploading ? 'Uploading…' : 'Bulk Upload CSV'}
+          </button>
+          <Link
+            href="/admin/programs/new"
+            className="inline-flex items-center px-6 py-3 border border-transparent shadow-lg text-sm font-semibold rounded-xl text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 transform transition-all duration-200 hover:scale-105"
+          >
+            <PlusIcon className="h-5 w-5 mr-2" />
+            Add New Program
+          </Link>
+        </div>
       </div>
 
       {/* Filters */}
@@ -202,6 +277,27 @@ export default function ProgramsList() {
       {error && (
         <div className="rounded-md bg-red-50 p-4">
           <div className="text-sm text-red-700">{error}</div>
+        </div>
+      )}
+
+      {uploadResult && (
+        <div className="rounded-md bg-green-50 p-4">
+          <div className="text-sm text-green-800">
+            Inserted: <span className="font-semibold">{uploadResult.inserted}</span>, Skipped duplicates: <span className="font-semibold">{uploadResult.skipped_duplicates}</span>
+          </div>
+          {uploadResult.errors?.length > 0 && (
+            <div className="mt-2 text-sm text-yellow-800 bg-yellow-50 border border-yellow-200 rounded p-2">
+              <div className="font-medium">Row errors ({uploadResult.errors.length}):</div>
+              <ul className="list-disc ml-5">
+                {uploadResult.errors.slice(0, 5).map((er, idx) => (
+                  <li key={idx}>Row {er.row}: {er.error}</li>
+                ))}
+                {uploadResult.errors.length > 5 && (
+                  <li>+{uploadResult.errors.length - 5} more…</li>
+                )}
+              </ul>
+            </div>
+          )}
         </div>
       )}
 

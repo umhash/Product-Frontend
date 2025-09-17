@@ -101,6 +101,9 @@ export default function ApplicationStatusPage() {
   const [requestingInterview, setRequestingInterview] = useState(false);
   const [applyingCAS, setApplyingCAS] = useState(false);
   const [applyingVisa, setApplyingVisa] = useState(false);
+  const [visaDocuments, setVisaDocuments] = useState<any[]>([]);
+  const [uploadingVisaDoc, setUploadingVisaDoc] = useState<number | null>(null);
+  const [submittingVisaDocs, setSubmittingVisaDocs] = useState(false);
   const router = useRouter();
   const params = useParams();
   const applicationId = parseInt(params.id as string);
@@ -164,6 +167,15 @@ export default function ApplicationStatusPage() {
     }
   };
 
+  const fetchVisaDocuments = async () => {
+    try {
+      const response = await applicationsApi.getVisaDocuments(applicationId);
+      setVisaDocuments(response);
+    } catch (error: any) {
+      console.error('Failed to fetch visa documents:', error);
+    }
+  };
+
   const handleUploadInterviewDocument = async (documentTypeId: number, file: File) => {
     setUploadingDoc(documentTypeId);
     try {
@@ -188,6 +200,34 @@ export default function ApplicationStatusPage() {
       setError('Failed to request interview');
     } finally {
       setRequestingInterview(false);
+    }
+  };
+
+  const handleUploadVisaDocument = async (documentTypeId: number, file: File) => {
+    setUploadingVisaDoc(documentTypeId);
+    try {
+      await applicationsApi.uploadVisaDocument(applicationId, documentTypeId, file);
+      await fetchVisaDocuments();
+      await fetchApplication();
+    } catch (error: any) {
+      console.error('Failed to upload visa document:', error);
+      setError('Failed to upload visa document');
+    } finally {
+      setUploadingVisaDoc(null);
+    }
+  };
+
+  const handleSubmitVisaDocuments = async () => {
+    setSubmittingVisaDocs(true);
+    try {
+      await applicationsApi.submitVisaDocuments(applicationId);
+      await fetchApplication();
+    } catch (error: any) {
+      console.error('Failed to submit visa documents:', error);
+      const msg = error.response?.data?.detail || 'Failed to submit visa documents';
+      setError(msg);
+    } finally {
+      setSubmittingVisaDocs(false);
     }
   };
 
@@ -280,7 +320,7 @@ export default function ApplicationStatusPage() {
       {
         id: 'offer_letter_requested',
         title: 'Offer Letter Requested',
-        description: 'University offer letter has been requested',
+        description: 'Your application is accepted to proceed. Offer letter requested from university',
         icon: GraduationCap,
         status: application.status === 'under_review' ? 'current' :
                ['offer_letter_requested', 'offer_letter_received', 'interview_documents_required', 'interview_requested', 'interview_scheduled', 'accepted', 'rejected', 'cas_documents_required', 'cas_application_in_progress', 'visa_documents_required', 'visa_application_ready', 'visa_application_in_progress', 'completed'].includes(application.status) ? 'completed' : 'upcoming',
@@ -589,6 +629,71 @@ export default function ApplicationStatusPage() {
                           </div>
                         )}
 
+                        {/* Visa Documents Upload */}
+                        {step.id === 'visa' && application.status === 'visa_documents_required' && (
+                          <div className="mt-4">
+                            <h4 className="font-medium text-blue-900 mb-3">Required Documents for Visa</h4>
+                            <div className="space-y-3">
+                              {visaDocuments.map((doc: any) => (
+                                <div key={doc.id} className="flex items-center justify-between p-3 bg-white rounded-lg border">
+                                  <div className="flex-1">
+                                    <span className="font-medium text-gray-900">{doc.document_name}</span>
+                                    {doc.description && (
+                                      <p className="text-sm text-gray-500 mt-1">{doc.description}</p>
+                                    )}
+                                  </div>
+                                  <div className="flex items-center space-x-3">
+                                    {doc.is_uploaded ? (
+                                      <div className="flex items-center space-x-1 text-green-600">
+                                        <CheckCircle className="h-4 w-4" />
+                                        <span className="text-sm font-medium">Uploaded</span>
+                                      </div>
+                                    ) : (
+                                      <div className="flex items-center space-x-2">
+                                        <input
+                                          type="file"
+                                          id={`visa-file-${doc.id}`}
+                                          className="hidden"
+                                          accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                                          onChange={(e) => {
+                                            const file = e.target.files?.[0];
+                                            if (file) {
+                                              handleUploadVisaDocument(doc.document_type_id, file);
+                                            }
+                                          }}
+                                          disabled={uploadingVisaDoc === doc.document_type_id}
+                                        />
+                                        <label
+                                          htmlFor={`visa-file-${doc.id}`}
+                                          className={`cursor-pointer bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700 transition-colors flex items-center space-x-1 ${
+                                            uploadingVisaDoc === doc.document_type_id ? 'opacity-50 cursor-not-allowed' : ''
+                                          }`}
+                                        >
+                                          <Upload className="h-3 w-3" />
+                                          <span>{uploadingVisaDoc === doc.document_type_id ? 'Uploading...' : 'Upload'}</span>
+                                        </label>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+
+                            {visaDocuments.length > 0 && visaDocuments.every((d: any) => d.is_uploaded) && (
+                              <div className="mt-4">
+                                <button
+                                  onClick={handleSubmitVisaDocuments}
+                                  disabled={submittingVisaDocs}
+                                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                  <Plane className="h-4 w-4" />
+                                  <span>{submittingVisaDocs ? 'Submitting...' : 'Submit Visa Documents'}</span>
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
                         {/* Interview Scheduled Status */}
                         {step.id === 'interview' && application.status === 'interview_scheduled' && (
                           <div className="mt-4 p-3 bg-green-100 rounded-lg">
@@ -727,7 +832,7 @@ export default function ApplicationStatusPage() {
                         )}
 
                         {/* Visa Application */}
-                        {step.id === 'visa' && application.visa_application_enabled_at && !application.visa_applied_at && (
+                        {step.id === 'visa' && application.status === 'visa_application_ready' && !application.visa_applied_at && (
                           <div className="mt-4">
                             <button
                               onClick={handleApplyVisa}

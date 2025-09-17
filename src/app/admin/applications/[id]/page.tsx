@@ -15,9 +15,12 @@ import {
   Send,
   Calendar,
   CreditCard,
-  Settings
+  Settings,
+  Mail,
+  Edit3
 } from 'lucide-react';
 import adminApi, { adminApplicationsApi, documentTypesApi } from '@/lib/adminApi';
+import OfferLetterEmailEditor from '@/components/admin/OfferLetterEmailEditor';
 
 interface Application {
   id: number;
@@ -29,6 +32,10 @@ interface Application {
   offer_letter_filename?: string;
   offer_letter_original_filename?: string;
   offer_letter_size?: number;
+  // Email draft fields
+  offer_letter_email_draft?: string;
+  offer_letter_email_generated_at?: string;
+  offer_letter_email_edited_by_admin?: boolean;
   interview_documents_configured_at?: string;
   interview_requested_at?: string;
   interview_scheduled_at?: string;
@@ -159,6 +166,14 @@ export default function AdminApplicationDetailsPage() {
   const [visaNotes, setVisaNotes] = useState('');
   const [visaFile, setVisaFile] = useState<File | null>(null);
   const [uploadingVisa, setUploadingVisa] = useState(false);
+  
+  // Email Editor State
+  const [showEmailEditor, setShowEmailEditor] = useState(false);
+  const [isGeneratingEmail, setIsGeneratingEmail] = useState(false);
+  const [isSavingEmail, setIsSavingEmail] = useState(false);
+  const [emailError, setEmailError] = useState('');
+  const [requestingOffer, setRequestingOffer] = useState(false);
+  
   const router = useRouter();
   const params = useParams();
   const applicationId = parseInt(params.id as string);
@@ -179,6 +194,10 @@ export default function AdminApplicationDetailsPage() {
     if (application && (application.status === 'visa_documents_required' || application.visa_documents_configured_at)) {
       fetchVisaDocuments();
     }
+    // Auto-prompt admin to configure visa docs right after CAS upload enables visa
+    if (application && application.visa_application_enabled_at && !application.visa_documents_configured_at) {
+      setShowVisaConfig(true);
+    }
   }, [application]);
 
   const fetchApplication = async () => {
@@ -190,6 +209,19 @@ export default function AdminApplicationDetailsPage() {
       setError('Failed to load application details');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleAcceptAndRequestOffer = async () => {
+    try {
+      setRequestingOffer(true);
+      await adminApplicationsApi.requestOfferLetter(applicationId, true);
+      await fetchApplication();
+    } catch (error: any) {
+      console.error('Failed to request offer letter:', error);
+      setError('Failed to request offer letter');
+    } finally {
+      setRequestingOffer(false);
     }
   };
 
@@ -232,17 +264,9 @@ export default function AdminApplicationDetailsPage() {
     }
   };
 
-  const handleRequestOfferLetter = async () => {
-    setActionLoading(true);
-    try {
-      await adminApi.post(`/admin/api/applications/${applicationId}/request-offer-letter`);
-      await fetchApplication(); // Refresh data
-    } catch (error: any) {
-      console.error('Failed to request offer letter:', error);
-      setError('Failed to request offer letter');
-    } finally {
-      setActionLoading(false);
-    }
+  const handleOpenOfferLetterModal = async () => {
+    setEmailError('');
+    setShowEmailEditor(true);
   };
 
   const handleUploadOfferLetter = async () => {
@@ -287,6 +311,61 @@ export default function AdminApplicationDetailsPage() {
       console.error('Failed to download offer letter:', error);
       setError('Failed to download offer letter');
     }
+  };
+
+  // Email handling functions
+  const handleGenerateEmail = async (): Promise<string> => {
+    setIsGeneratingEmail(true);
+    setEmailError('');
+    
+    try {
+      // Single invocation guard when modal opens
+      if ((window as any).__offer_email_gen_lock__) {
+        // If already in-flight, wait briefly and try to read from state
+        await new Promise((r) => setTimeout(r, 200));
+      }
+      (window as any).__offer_email_gen_lock__ = true;
+      const response = await adminApplicationsApi.generateOfferLetterEmail(applicationId);
+      // Update local state immediately so UI shows content without a second request
+      if (application) {
+        setApplication({ ...application, offer_letter_email_draft: response.email_draft });
+      }
+      return response.email_draft;
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.detail || error.message || 'Failed to generate email';
+      setEmailError(errorMessage);
+      throw new Error(errorMessage);
+    } finally {
+      setIsGeneratingEmail(false);
+      (window as any).__offer_email_gen_lock__ = false;
+    }
+  };
+
+  const handleSaveEmail = async (emailContent: string): Promise<void> => {
+    setIsSavingEmail(true);
+    setEmailError('');
+    
+    try {
+      await adminApplicationsApi.updateOfferLetterEmailDraft(applicationId, emailContent);
+      await fetchApplication();
+      setShowEmailEditor(false);
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.detail || error.message || 'Failed to save email';
+      setEmailError(errorMessage);
+      throw new Error(errorMessage);
+    } finally {
+      setIsSavingEmail(false);
+    }
+  };
+
+  const handleShowEmailEditor = () => {
+    setEmailError('');
+    setShowEmailEditor(true);
+  };
+
+  const handleCloseEmailEditor = () => {
+    setShowEmailEditor(false);
+    setEmailError('');
   };
 
   const handleConfigureInterview = async () => {
@@ -1168,18 +1247,79 @@ export default function AdminApplicationDetailsPage() {
                       {step.id === 'under_review' && (application.status === 'submitted' || application.status === 'under_review') && (
                         <div className="mt-4 pt-4 border-t border-blue-200">
                           <button
-                            onClick={handleRequestOfferLetter}
-                            disabled={actionLoading}
-                            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center space-x-2"
+                            onClick={handleAcceptAndRequestOffer}
+                            disabled={requestingOffer}
+                            className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 disabled:opacity-50 flex items-center space-x-2"
                           >
                             <Send className="h-4 w-4" />
-                            <span>{actionLoading ? 'Requesting...' : 'Request Offer Letter'}</span>
+                            <span>{requestingOffer ? 'Requesting…' : 'Accept & Request Offer'}</span>
                           </button>
                         </div>
                       )}
 
                       {step.id === 'offer_letter_requested' && application.status === 'offer_letter_requested' && (
                         <div className="mt-4 pt-4 border-t border-purple-200">
+                          {/* Email Draft Section */}
+                          {application.offer_letter_email_draft && (
+                            <div className="mb-6 p-4 bg-indigo-50 rounded-lg border border-indigo-200">
+                              <div className="flex items-center justify-between mb-3">
+                                <div className="flex items-center space-x-2">
+                                  <Mail className="h-5 w-5 text-indigo-600" />
+                                  <h6 className="font-medium text-indigo-900">Email Draft Generated</h6>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  <button
+                                    onClick={handleShowEmailEditor}
+                                    className="flex items-center space-x-1 px-3 py-1 bg-indigo-600 text-white rounded text-sm hover:bg-indigo-700"
+                                  >
+                                    <Edit3 className="h-3 w-3" />
+                                    <span>Edit</span>
+                                  </button>
+                                </div>
+                              </div>
+                              
+                              <div className="bg-white p-3 rounded border max-h-32 overflow-y-auto text-sm text-gray-700">
+                                {application.offer_letter_email_draft.substring(0, 300)}
+                                {application.offer_letter_email_draft.length > 300 && '...'}
+                              </div>
+                              
+                              <div className="mt-2 flex items-center justify-between text-xs text-indigo-600">
+                                <span>
+                                  Generated: {application.offer_letter_email_generated_at ? 
+                                    new Date(application.offer_letter_email_generated_at).toLocaleString() : 'Unknown'}
+                                </span>
+                                {application.offer_letter_email_edited_by_admin && (
+                                  <span className="bg-indigo-100 px-2 py-1 rounded">Edited by Admin</span>
+                                )}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Show email error if any */}
+                          {emailError && (
+                            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center space-x-2">
+                              <AlertCircle className="h-4 w-4 text-red-500 flex-shrink-0" />
+                              <p className="text-sm text-red-600">{emailError}</p>
+                            </div>
+                          )}
+
+                          {/* Generate Email Button (if no draft exists) */}
+                          {!application.offer_letter_email_draft && (
+                            <div className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                              <p className="text-sm text-blue-700 mb-3">
+                                Generate a professional email draft to request the offer letter from the university.
+                              </p>
+                              <button
+                                onClick={handleShowEmailEditor}
+                                disabled={isGeneratingEmail}
+                                className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                              >
+                                <Mail className="h-4 w-4" />
+                                <span>{isGeneratingEmail ? 'Generating...' : 'Generate Email Draft'}</span>
+                              </button>
+                            </div>
+                          )}
+
                           <h5 className="font-medium text-purple-900 mb-3">Upload Offer Letter</h5>
                           <div className="space-y-3">
                             <input
@@ -1808,7 +1948,18 @@ export default function AdminApplicationDetailsPage() {
         </div>
       </div>
 
-
+      {/* Email Editor Modal */}
+      <OfferLetterEmailEditor
+        isOpen={showEmailEditor}
+        onClose={handleCloseEmailEditor}
+        applicationId={applicationId}
+        initialEmailDraft={application?.offer_letter_email_draft || ''}
+        onSave={handleSaveEmail}
+        onGenerate={handleGenerateEmail}
+        isGenerating={isGeneratingEmail}
+        isSaving={isSavingEmail}
+        saveButtonLabel="Save & Mark Requested"
+      />
 
     </div>
   );

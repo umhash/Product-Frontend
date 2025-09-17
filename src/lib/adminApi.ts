@@ -110,6 +110,23 @@ export const programsApi = {
     );
     return response.data;
   },
+
+  downloadProgramsTemplate: async () => {
+    const response = await adminApi.get('/admin/api/programs/csv-template', {
+      responseType: 'blob',
+    });
+    return response;
+  },
+
+  bulkUploadPrograms: async (file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await adminApi.post('/admin/api/programs/bulk-upload', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data as { inserted: number; skipped_duplicates: number; errors: { row: number; error: string }[] };
+  },
 };
 
 // Documents API
@@ -185,6 +202,13 @@ export const documentTypesApi = {
 
 // Applications API
 export const adminApplicationsApi = {
+  requestOfferLetter: async (applicationId: number, generateEmail: boolean = true) => {
+    const response = await adminApi.post(`/admin/api/applications/${applicationId}/request-offer-letter`, null, {
+      params: { generate_email: generateEmail }
+    });
+    return response.data;
+  },
+
   downloadOfferLetter: async (applicationId: number) => {
     const response = await adminApi.get(`/admin/api/applications/${applicationId}/offer-letter/download`, {
       responseType: 'blob',
@@ -292,6 +316,24 @@ export const adminApplicationsApi = {
       responseType: 'blob',
     });
     return response;
+  },
+
+  // Offer Letter Email Management
+  generateOfferLetterEmail: async (applicationId: number) => {
+    const response = await adminApi.post(`/admin/api/applications/${applicationId}/generate-offer-letter-email`);
+    return response.data;
+  },
+
+  getOfferLetterEmailDraft: async (applicationId: number) => {
+    const response = await adminApi.get(`/admin/api/applications/${applicationId}/offer-letter-email-draft`);
+    return response.data;
+  },
+
+  updateOfferLetterEmailDraft: async (applicationId: number, emailContent: string) => {
+    const response = await adminApi.put(`/admin/api/applications/${applicationId}/offer-letter-email-draft`, {
+      email_content: emailContent
+    });
+    return response.data;
   },
 };
 

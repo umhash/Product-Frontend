@@ -24,12 +24,9 @@ export interface RAGQueryRequest {
   query: string;
   max_chunks?: number;
   similarity_threshold?: number;
-  program_ids?: number[];
 }
 
 export interface RAGChunk {
-  id: number;
-  rag_document_id: number;
   content: string;
   chunk_index: number;
   token_count: number;
@@ -37,9 +34,16 @@ export interface RAGChunk {
   section_title?: string;
   chunk_type: string;
   chunk_metadata?: Record<string, any>;
-  embedding_model: string;
-  created_at: string;
   similarity_score: number;
+  
+  // University-specific metadata
+  program_document_id: number;
+  program_id: number;
+  university_name?: string;
+  program_name?: string;
+  program_level?: string;
+  field_of_study?: string;
+  document_type?: string;
 }
 
 export interface RAGQueryResponse {
@@ -49,6 +53,7 @@ export interface RAGQueryResponse {
   embedding_time_ms: number;
   retrieval_time_ms: number;
   total_time_ms: number;
+  search_method: string; // hybrid, dense, sparse
 }
 
 export interface RAGDocument {
