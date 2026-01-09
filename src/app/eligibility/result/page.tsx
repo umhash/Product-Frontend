@@ -36,6 +36,8 @@ interface SuggestedProgram {
   program_level: string;
   field_of_study: string;
   city: string;
+  tuition_fee_min_gbp?: number;
+  tuition_fee_max_gbp?: number;
   tuition_fee_gbp?: number;
   match_score: number;
   tags: string[];
@@ -306,10 +308,14 @@ export default function EligibilityResult() {
                         <Clock className="h-4 w-4 text-gray-500" />
                         <span className="text-sm font-medium text-gray-700">{program.program_level}</span>
                       </div>
-                      {program.tuition_fee_gbp && (
+                      {(program.tuition_fee_min_gbp || program.tuition_fee_gbp) && (
                         <div className="flex items-center space-x-2">
                           <DollarSign className="h-4 w-4 text-gray-500" />
-                          <span className="text-sm font-medium text-gray-700">£{program.tuition_fee_gbp.toLocaleString()}/year</span>
+                          <span className="text-sm font-medium text-gray-700">
+                            {program.tuition_fee_min_gbp && program.tuition_fee_max_gbp
+                              ? `£${program.tuition_fee_min_gbp.toLocaleString()}-${program.tuition_fee_max_gbp.toLocaleString()}`
+                              : `£${program.tuition_fee_gbp?.toLocaleString()}`}/year
+                          </span>
                         </div>
                       )}
                       <div className="flex items-center space-x-2">

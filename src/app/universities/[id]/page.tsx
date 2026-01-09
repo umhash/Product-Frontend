@@ -39,15 +39,28 @@ interface UniversityDetails {
   min_ielts_components?: number;
   min_toefl_overall?: number;
   min_pte_overall?: number;
+  duolingo_min_score?: number;
   min_gpa_4_scale?: number;
   min_percentage?: number;
   required_qualification?: string;
+  tuition_fee_min_gbp?: number;
+  tuition_fee_max_gbp?: number;
   tuition_fee_gbp?: number;
   living_cost_gbp?: number;
   duration_months?: number;
   intake_months?: number[];
   city: string;
   program_description?: string;
+  programs_available?: string;
+  ug_entry_requirements?: string;
+  pg_entry_requirements?: string;
+  english_requirements_text?: string;
+  moi_accepted?: string;
+  initial_deposit_gbp?: number;
+  scholarships?: string;
+  study_gap_acceptable?: string;
+  special_notes?: string;
+  entry_requirements_text?: string;
   is_active: boolean;
   created_at: string;
   documents: ProgramDocument[];
@@ -218,7 +231,11 @@ export default function UniversityDetails() {
             <div className="text-right">
               <div className="bg-white bg-opacity-20 p-4 rounded-lg">
                 <div className="text-3xl font-bold">
-                  {university.tuition_fee_gbp ? `£${university.tuition_fee_gbp.toLocaleString()}` : 'TBD'}
+                  {university.tuition_fee_min_gbp && university.tuition_fee_max_gbp 
+                    ? `£${university.tuition_fee_min_gbp.toLocaleString()} - £${university.tuition_fee_max_gbp.toLocaleString()}`
+                    : university.tuition_fee_gbp 
+                    ? `£${university.tuition_fee_gbp.toLocaleString()}`
+                    : 'TBD'}
                 </div>
                 <div className="text-sm">per year</div>
               </div>
@@ -248,14 +265,12 @@ export default function UniversityDetails() {
               </h2>
               
               <div className="grid md:grid-cols-2 gap-6">
-                {/* Academic Requirements */}
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Academic Qualifications</h3>
                   <div className="space-y-3">
-                    {university.required_qualification && (
-                      <div className="flex items-center space-x-3">
-                        <div className="w-2 h-2 bg-indigo-500 rounded-full"></div>
-                        <span className="text-gray-700">{university.required_qualification}</span>
+                    {university.entry_requirements_text && (
+                      <div className="bg-gray-50 p-3 rounded-lg">
+                        <p className="text-sm text-gray-700">{university.entry_requirements_text}</p>
                       </div>
                     )}
                     {university.min_gpa_4_scale && (
@@ -273,16 +288,20 @@ export default function UniversityDetails() {
                   </div>
                 </div>
 
-                {/* English Requirements */}
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">English Language</h3>
                   <div className="space-y-3">
+                    {university.english_requirements_text && (
+                      <div className="bg-gray-50 p-3 rounded-lg mb-3">
+                        <p className="text-sm text-gray-700">{university.english_requirements_text}</p>
+                      </div>
+                    )}
                     {university.min_ielts_overall && (
                       <div className="flex items-center space-x-3">
                         <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                         <span className="text-gray-700">
                           IELTS: {university.min_ielts_overall} overall
-                          {university.min_ielts_components && ` (${university.min_ielts_components} in each band)`}
+                          {university.min_ielts_components && ` (${university.min_ielts_components} each)`}
                         </span>
                       </div>
                     )}
@@ -298,9 +317,61 @@ export default function UniversityDetails() {
                         <span className="text-gray-700">PTE: {university.min_pte_overall}</span>
                       </div>
                     )}
+                    {university.duolingo_min_score && (
+                      <div className="flex items-center space-x-3">
+                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                        <span className="text-gray-700">Duolingo: {university.duolingo_min_score}</span>
+                      </div>
+                    )}
+                    {university.moi_accepted && (
+                      <div className="mt-3 p-3 bg-blue-50 rounded-lg">
+                        <p className="text-sm text-blue-900"><strong>MOI:</strong> {university.moi_accepted}</p>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
+
+              {(university.scholarships || university.initial_deposit_gbp || university.study_gap_acceptable) && (
+                <div className="mt-6 pt-6 border-t">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Additional Information</h3>
+                  <div className="space-y-3">
+                    {university.initial_deposit_gbp && (
+                      <div className="flex items-start space-x-3">
+                        <DollarSign className="h-5 w-5 text-indigo-500 mt-0.5" />
+                        <div>
+                          <p className="font-medium text-gray-900">Initial Deposit</p>
+                          <p className="text-sm text-gray-700">£{university.initial_deposit_gbp.toLocaleString()}</p>
+                        </div>
+                      </div>
+                    )}
+                    {university.scholarships && (
+                      <div className="flex items-start space-x-3">
+                        <Star className="h-5 w-5 text-yellow-500 mt-0.5" />
+                        <div>
+                          <p className="font-medium text-gray-900">Scholarships Available</p>
+                          <p className="text-sm text-gray-700">{university.scholarships}</p>
+                        </div>
+                      </div>
+                    )}
+                    {university.study_gap_acceptable && (
+                      <div className="flex items-start space-x-3">
+                        <Calendar className="h-5 w-5 text-blue-500 mt-0.5" />
+                        <div>
+                          <p className="font-medium text-gray-900">Study Gap</p>
+                          <p className="text-sm text-gray-700">{university.study_gap_acceptable}</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {university.special_notes && (
+                <div className="mt-6 p-4 bg-yellow-50 border-l-4 border-yellow-400 rounded">
+                  <p className="text-sm text-yellow-900"><strong>Important:</strong> {university.special_notes}</p>
+                </div>
+              )}
             </div>
 
             {/* Documents Section */}
