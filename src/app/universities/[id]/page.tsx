@@ -257,7 +257,41 @@ export default function UniversityDetails() {
               </div>
             )}
 
-            {/* Entry Requirements */}
+            {university.programs_available && (
+              <div className="bg-white rounded-2xl shadow-lg p-6">
+                <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center space-x-2">
+                  <GraduationCap className="h-6 w-6 text-indigo-600" />
+                  <span>Available Programs</span>
+                </h2>
+                <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{university.programs_available}</p>
+              </div>
+            )}
+
+            {(university.ug_entry_requirements || university.pg_entry_requirements) && (
+              <div className="bg-white rounded-2xl shadow-lg p-6">
+                <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center space-x-2">
+                  <CheckCircle className="h-6 w-6 text-green-600" />
+                  <span>Program-Specific Requirements</span>
+                </h2>
+                
+                <div className="space-y-6">
+                  {university.ug_entry_requirements && (
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-3">Undergraduate Programs</h3>
+                      <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{university.ug_entry_requirements}</p>
+                    </div>
+                  )}
+                  
+                  {university.pg_entry_requirements && (
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-3">Postgraduate Programs</h3>
+                      <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{university.pg_entry_requirements}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             <div className="bg-white rounded-2xl shadow-lg p-6">
               <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center space-x-2">
                 <CheckCircle className="h-6 w-6 text-green-600" />

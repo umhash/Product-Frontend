@@ -19,15 +19,28 @@ interface ProgramFormData {
   min_ielts_components: number | '';
   min_toefl_overall: number | '';
   min_pte_overall: number | '';
+  duolingo_min_score: number | '';
   min_gpa_4_scale: number | '';
   min_percentage: number | '';
   required_qualification: string;
+  tuition_fee_min_gbp: number | '';
+  tuition_fee_max_gbp: number | '';
   tuition_fee_gbp: number | '';
   living_cost_gbp: number | '';
+  initial_deposit_gbp: number | '';
   duration_months: number | '';
   intake_months: number[];
   city: string;
   program_description: string;
+  programs_available: string;
+  ug_entry_requirements: string;
+  pg_entry_requirements: string;
+  english_requirements_text: string;
+  moi_accepted: string;
+  scholarships: string;
+  study_gap_acceptable: string;
+  special_notes: string;
+  entry_requirements_text: string;
   is_active: boolean;
 }
 
@@ -40,15 +53,28 @@ const initialFormData: ProgramFormData = {
   min_ielts_components: '',
   min_toefl_overall: '',
   min_pte_overall: '',
+  duolingo_min_score: '',
   min_gpa_4_scale: '',
   min_percentage: '',
   required_qualification: '',
+  tuition_fee_min_gbp: '',
+  tuition_fee_max_gbp: '',
   tuition_fee_gbp: '',
   living_cost_gbp: '',
+  initial_deposit_gbp: '',
   duration_months: '',
   intake_months: [],
   city: '',
   program_description: '',
+  programs_available: '',
+  ug_entry_requirements: '',
+  pg_entry_requirements: '',
+  english_requirements_text: '',
+  moi_accepted: '',
+  scholarships: '',
+  study_gap_acceptable: '',
+  special_notes: '',
+  entry_requirements_text: '',
   is_active: true,
 };
 
@@ -77,14 +103,27 @@ export default function ProgramForm({ programId, onSuccess, onCancel }: ProgramF
         min_ielts_components: program.min_ielts_components || '',
         min_toefl_overall: program.min_toefl_overall || '',
         min_pte_overall: program.min_pte_overall || '',
+        duolingo_min_score: program.duolingo_min_score || '',
         min_gpa_4_scale: program.min_gpa_4_scale || '',
         min_percentage: program.min_percentage || '',
+        tuition_fee_min_gbp: program.tuition_fee_min_gbp || '',
+        tuition_fee_max_gbp: program.tuition_fee_max_gbp || '',
         tuition_fee_gbp: program.tuition_fee_gbp || '',
         living_cost_gbp: program.living_cost_gbp || '',
+        initial_deposit_gbp: program.initial_deposit_gbp || '',
         duration_months: program.duration_months || '',
         intake_months: program.intake_months || [],
         required_qualification: program.required_qualification || '',
         program_description: program.program_description || '',
+        programs_available: program.programs_available || '',
+        ug_entry_requirements: program.ug_entry_requirements || '',
+        pg_entry_requirements: program.pg_entry_requirements || '',
+        english_requirements_text: program.english_requirements_text || '',
+        moi_accepted: program.moi_accepted || '',
+        scholarships: program.scholarships || '',
+        study_gap_acceptable: program.study_gap_acceptable || '',
+        special_notes: program.special_notes || '',
+        entry_requirements_text: program.entry_requirements_text || '',
       });
     } catch (error) {
       setError('Failed to load program data');
@@ -129,13 +168,26 @@ export default function ProgramForm({ programId, onSuccess, onCancel }: ProgramF
         min_ielts_components: formData.min_ielts_components === '' ? null : formData.min_ielts_components,
         min_toefl_overall: formData.min_toefl_overall === '' ? null : formData.min_toefl_overall,
         min_pte_overall: formData.min_pte_overall === '' ? null : formData.min_pte_overall,
+        duolingo_min_score: formData.duolingo_min_score === '' ? null : formData.duolingo_min_score,
         min_gpa_4_scale: formData.min_gpa_4_scale === '' ? null : formData.min_gpa_4_scale,
         min_percentage: formData.min_percentage === '' ? null : formData.min_percentage,
+        tuition_fee_min_gbp: formData.tuition_fee_min_gbp === '' ? null : formData.tuition_fee_min_gbp,
+        tuition_fee_max_gbp: formData.tuition_fee_max_gbp === '' ? null : formData.tuition_fee_max_gbp,
         tuition_fee_gbp: formData.tuition_fee_gbp === '' ? null : formData.tuition_fee_gbp,
         living_cost_gbp: formData.living_cost_gbp === '' ? null : formData.living_cost_gbp,
+        initial_deposit_gbp: formData.initial_deposit_gbp === '' ? null : formData.initial_deposit_gbp,
         duration_months: formData.duration_months === '' ? null : formData.duration_months,
         required_qualification: formData.required_qualification || null,
         program_description: formData.program_description || null,
+        programs_available: formData.programs_available || null,
+        ug_entry_requirements: formData.ug_entry_requirements || null,
+        pg_entry_requirements: formData.pg_entry_requirements || null,
+        english_requirements_text: formData.english_requirements_text || null,
+        moi_accepted: formData.moi_accepted || null,
+        scholarships: formData.scholarships || null,
+        study_gap_acceptable: formData.study_gap_acceptable || null,
+        special_notes: formData.special_notes || null,
+        entry_requirements_text: formData.entry_requirements_text || null,
       };
 
       let program;
@@ -425,6 +477,22 @@ export default function ProgramForm({ programId, onSuccess, onCancel }: ProgramF
           </div>
 
           <div>
+            <label htmlFor="duolingo_min_score" className="block text-sm font-medium text-gray-700">
+              Min Duolingo Score
+            </label>
+            <input
+              type="number"
+              name="duolingo_min_score"
+              id="duolingo_min_score"
+              min="0"
+              max="160"
+              value={formData.duolingo_min_score}
+              onChange={handleChange}
+              className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+            />
+          </div>
+
+          <div>
             <label htmlFor="min_gpa_4_scale" className="block text-sm font-medium text-gray-700">
               Min GPA (4.0 scale)
             </label>
@@ -471,6 +539,76 @@ export default function ProgramForm({ programId, onSuccess, onCancel }: ProgramF
             className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
           />
         </div>
+
+        <div className="mt-6">
+          <label htmlFor="entry_requirements_text" className="block text-sm font-medium text-gray-700">
+            Entry Requirements (Detailed Text)
+          </label>
+          <textarea
+            name="entry_requirements_text"
+            id="entry_requirements_text"
+            rows={3}
+            value={formData.entry_requirements_text}
+            onChange={handleChange}
+            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+          />
+        </div>
+
+        <div className="mt-6">
+          <label htmlFor="ug_entry_requirements" className="block text-sm font-medium text-gray-700">
+            Undergraduate Entry Requirements
+          </label>
+          <textarea
+            name="ug_entry_requirements"
+            id="ug_entry_requirements"
+            rows={3}
+            value={formData.ug_entry_requirements}
+            onChange={handleChange}
+            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+          />
+        </div>
+
+        <div className="mt-6">
+          <label htmlFor="pg_entry_requirements" className="block text-sm font-medium text-gray-700">
+            Postgraduate Entry Requirements
+          </label>
+          <textarea
+            name="pg_entry_requirements"
+            id="pg_entry_requirements"
+            rows={3}
+            value={formData.pg_entry_requirements}
+            onChange={handleChange}
+            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+          />
+        </div>
+
+        <div className="mt-6">
+          <label htmlFor="english_requirements_text" className="block text-sm font-medium text-gray-700">
+            English Language Requirements (Detailed Text)
+          </label>
+          <textarea
+            name="english_requirements_text"
+            id="english_requirements_text"
+            rows={3}
+            value={formData.english_requirements_text}
+            onChange={handleChange}
+            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+          />
+        </div>
+
+        <div className="mt-6">
+          <label htmlFor="moi_accepted" className="block text-sm font-medium text-gray-700">
+            Medium of Instruction (MOI) Accepted
+          </label>
+          <input
+            type="text"
+            name="moi_accepted"
+            id="moi_accepted"
+            value={formData.moi_accepted}
+            onChange={handleChange}
+            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+          />
+        </div>
       </div>
 
       {/* Financial Information */}
@@ -478,6 +616,38 @@ export default function ProgramForm({ programId, onSuccess, onCancel }: ProgramF
         <h3 className="text-lg font-medium text-gray-900 mb-4">Financial Information</h3>
         
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+          <div>
+            <label htmlFor="tuition_fee_min_gbp" className="block text-sm font-medium text-gray-700">
+              Tuition Fee Min (GBP)
+            </label>
+            <input
+              type="number"
+              name="tuition_fee_min_gbp"
+              id="tuition_fee_min_gbp"
+              min="0"
+              value={formData.tuition_fee_min_gbp}
+              onChange={handleChange}
+              className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              placeholder="For fee range (optional)"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="tuition_fee_max_gbp" className="block text-sm font-medium text-gray-700">
+              Tuition Fee Max (GBP)
+            </label>
+            <input
+              type="number"
+              name="tuition_fee_max_gbp"
+              id="tuition_fee_max_gbp"
+              min="0"
+              value={formData.tuition_fee_max_gbp}
+              onChange={handleChange}
+              className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              placeholder="For fee range (optional)"
+            />
+          </div>
+
           <div>
             <label htmlFor="tuition_fee_gbp" className="block text-sm font-medium text-gray-700">
               Tuition Fee (GBP)
@@ -490,6 +660,7 @@ export default function ProgramForm({ programId, onSuccess, onCancel }: ProgramF
               value={formData.tuition_fee_gbp}
               onChange={handleChange}
               className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              placeholder="For single fee (optional)"
             />
           </div>
 
@@ -507,10 +678,86 @@ export default function ProgramForm({ programId, onSuccess, onCancel }: ProgramF
               className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
             />
           </div>
+
+          <div>
+            <label htmlFor="initial_deposit_gbp" className="block text-sm font-medium text-gray-700">
+              Initial Deposit (GBP)
+            </label>
+            <input
+              type="number"
+              name="initial_deposit_gbp"
+              id="initial_deposit_gbp"
+              min="0"
+              value={formData.initial_deposit_gbp}
+              onChange={handleChange}
+              className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+            />
+          </div>
         </div>
       </div>
 
-      {/* Document Upload (only for editing) */}
+      <div className="bg-white shadow rounded-lg p-6">
+        <h3 className="text-lg font-medium text-gray-900 mb-4">Additional Information</h3>
+        
+        <div className="space-y-6">
+          <div>
+            <label htmlFor="programs_available" className="block text-sm font-medium text-gray-700">
+              Available Programs
+            </label>
+            <textarea
+              name="programs_available"
+              id="programs_available"
+              rows={3}
+              value={formData.programs_available}
+              onChange={handleChange}
+              className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="scholarships" className="block text-sm font-medium text-gray-700">
+              Scholarship Information
+            </label>
+            <textarea
+              name="scholarships"
+              id="scholarships"
+              rows={3}
+              value={formData.scholarships}
+              onChange={handleChange}
+              className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="study_gap_acceptable" className="block text-sm font-medium text-gray-700">
+              Study Gap Policy
+            </label>
+            <input
+              type="text"
+              name="study_gap_acceptable"
+              id="study_gap_acceptable"
+              value={formData.study_gap_acceptable}
+              onChange={handleChange}
+              className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="special_notes" className="block text-sm font-medium text-gray-700">
+              Special Notes
+            </label>
+            <textarea
+              name="special_notes"
+              id="special_notes"
+              rows={3}
+              value={formData.special_notes}
+              onChange={handleChange}
+              className="mt-1 block w-full border-yellow-300 rounded-md shadow-sm focus:ring-yellow-500 focus:border-yellow-500 sm:text-sm bg-yellow-50"
+            />
+          </div>
+        </div>
+      </div>
+
       {isEditing && (
         <div className="bg-white shadow rounded-lg p-6">
           <h3 className="text-lg font-medium text-gray-900 mb-4">Upload Documents</h3>

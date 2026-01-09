@@ -31,20 +31,31 @@ interface Program {
   is_active: boolean;
   created_at: string;
   
-  // Entry requirements
   min_ielts_overall: number | null;
   min_ielts_components: number | null;
   min_toefl_overall: number | null;
   min_pte_overall: number | null;
+  duolingo_min_score: number | null;
   min_gpa_4_scale: number | null;
   min_percentage: number | null;
   required_qualification: string | null;
   
-  // Financial
+  tuition_fee_min_gbp: number | null;
+  tuition_fee_max_gbp: number | null;
   tuition_fee_gbp: number | null;
   living_cost_gbp: number | null;
+  initial_deposit_gbp: number | null;
+
+  programs_available: string | null;
+  ug_entry_requirements: string | null;
+  pg_entry_requirements: string | null;
+  english_requirements_text: string | null;
+  moi_accepted: string | null;
+  scholarships: string | null;
+  study_gap_acceptable: string | null;
+  special_notes: string | null;
+  entry_requirements_text: string | null;
   
-  // Documents
   documents: any[];
 }
 
@@ -293,6 +304,12 @@ export default function ProgramDetail() {
                 <dd className="text-sm text-gray-900">{program.min_pte_overall}</dd>
               </div>
             )}
+            {program.duolingo_min_score && (
+              <div className="flex justify-between">
+                <dt className="text-sm text-gray-500">Min Duolingo Score</dt>
+                <dd className="text-sm text-gray-900">{program.duolingo_min_score}</dd>
+              </div>
+            )}
             {program.min_gpa_4_scale && (
               <div className="flex justify-between">
                 <dt className="text-sm text-gray-500">Min GPA (4.0 scale)</dt>
@@ -318,6 +335,14 @@ export default function ProgramDetail() {
                 <dd className="text-sm text-gray-900">{formatIntakeMonths(program.intake_months)}</dd>
               </div>
             )}
+            {(program.tuition_fee_min_gbp && program.tuition_fee_max_gbp) && (
+              <div className="flex justify-between">
+                <dt className="text-sm text-gray-500">Tuition Fee Range</dt>
+                <dd className="text-sm text-gray-900">
+                  {formatCurrency(program.tuition_fee_min_gbp)} - {formatCurrency(program.tuition_fee_max_gbp)}
+                </dd>
+              </div>
+            )}
             {program.tuition_fee_gbp && (
               <div className="flex justify-between">
                 <dt className="text-sm text-gray-500">Tuition Fee</dt>
@@ -330,6 +355,12 @@ export default function ProgramDetail() {
                 <dd className="text-sm text-gray-900">{formatCurrency(program.living_cost_gbp)}</dd>
               </div>
             )}
+            {program.initial_deposit_gbp && (
+              <div className="flex justify-between">
+                <dt className="text-sm text-gray-500">Initial Deposit</dt>
+                <dd className="text-sm text-gray-900">{formatCurrency(program.initial_deposit_gbp)}</dd>
+              </div>
+            )}
             <div className="flex justify-between">
               <dt className="text-sm text-gray-500">Created</dt>
               <dd className="text-sm text-gray-900">
@@ -340,7 +371,77 @@ export default function ProgramDetail() {
         </div>
       </div>
 
-      {/* Document Requirements Section */}
+      {(program.entry_requirements_text || program.ug_entry_requirements || program.pg_entry_requirements || 
+        program.english_requirements_text || program.moi_accepted) && (
+        <div className="bg-white shadow rounded-lg p-6">
+          <h3 className="text-lg font-medium text-gray-900 mb-4">Detailed Entry Requirements</h3>
+          <div className="space-y-4">
+            {program.entry_requirements_text && (
+              <div>
+                <h4 className="text-sm font-semibold text-gray-900 mb-2">Entry Requirements</h4>
+                <p className="text-sm text-gray-700 whitespace-pre-wrap">{program.entry_requirements_text}</p>
+              </div>
+            )}
+            {program.ug_entry_requirements && (
+              <div>
+                <h4 className="text-sm font-semibold text-gray-900 mb-2">Undergraduate Entry Requirements</h4>
+                <p className="text-sm text-gray-700 whitespace-pre-wrap">{program.ug_entry_requirements}</p>
+              </div>
+            )}
+            {program.pg_entry_requirements && (
+              <div>
+                <h4 className="text-sm font-semibold text-gray-900 mb-2">Postgraduate Entry Requirements</h4>
+                <p className="text-sm text-gray-700 whitespace-pre-wrap">{program.pg_entry_requirements}</p>
+              </div>
+            )}
+            {program.english_requirements_text && (
+              <div>
+                <h4 className="text-sm font-semibold text-gray-900 mb-2">English Language Requirements</h4>
+                <p className="text-sm text-gray-700 whitespace-pre-wrap">{program.english_requirements_text}</p>
+              </div>
+            )}
+            {program.moi_accepted && (
+              <div>
+                <h4 className="text-sm font-semibold text-gray-900 mb-2">Medium of Instruction (MOI) Accepted</h4>
+                <p className="text-sm text-gray-700">{program.moi_accepted}</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {(program.programs_available || program.scholarships || program.study_gap_acceptable || program.special_notes) && (
+        <div className="bg-white shadow rounded-lg p-6">
+          <h3 className="text-lg font-medium text-gray-900 mb-4">Additional Program Information</h3>
+          <div className="space-y-4">
+            {program.programs_available && (
+              <div>
+                <h4 className="text-sm font-semibold text-gray-900 mb-2">Available Programs</h4>
+                <p className="text-sm text-gray-700 whitespace-pre-wrap">{program.programs_available}</p>
+              </div>
+            )}
+            {program.scholarships && (
+              <div>
+                <h4 className="text-sm font-semibold text-gray-900 mb-2">Scholarship Information</h4>
+                <p className="text-sm text-gray-700 whitespace-pre-wrap">{program.scholarships}</p>
+              </div>
+            )}
+            {program.study_gap_acceptable && (
+              <div>
+                <h4 className="text-sm font-semibold text-gray-900 mb-2">Study Gap Policy</h4>
+                <p className="text-sm text-gray-700">{program.study_gap_acceptable}</p>
+              </div>
+            )}
+            {program.special_notes && (
+              <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded">
+                <h4 className="text-sm font-semibold text-yellow-900 mb-2">Special Notes</h4>
+                <p className="text-sm text-yellow-900 whitespace-pre-wrap">{program.special_notes}</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       <DocumentRequirements programId={programId} />
 
       {/* Documents */}
